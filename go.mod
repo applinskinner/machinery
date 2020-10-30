@@ -39,4 +39,6 @@ require (
 
 replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
 
+replace gopkg.in/robfig/cron.v3 => github.com/robfig/cron/v3 v3.0.0
+
 go 1.13
