@@ -9,7 +9,7 @@ import (
 
 	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/RichardKnop/redsync"
-	"gopkg.in/go-redis/redis.v8"
+	"github.com/go-redis/redis"
 )
 
 var (

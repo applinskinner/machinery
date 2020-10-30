@@ -18,7 +18,7 @@ import (
 	"github.com/RichardKnop/machinery/v1/log"
 	"github.com/RichardKnop/machinery/v1/tasks"
 	"github.com/RichardKnop/redsync"
-	"gopkg.in/go-redis/redis.v8"
+	"github.com/go-redis/redis"
 )
 
 // BrokerGR represents a Redis broker
