@@ -17,7 +17,7 @@ require (
 	github.com/klauspost/compress v1.11.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
-	github.com/robfig/cron/v3 v3.0.1
+	gopkg.in/robfig/cron.v3 v3.0.1
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.6.1
 	github.com/stvp/tempredis v0.0.0-20181119212430-b82af8480203 // indirect
