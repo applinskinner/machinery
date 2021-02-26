@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gopkg.in/robfig/cron.v3"
+	"github.com/robfig/cron/v3"
 
 	"github.com/RichardKnop/machinery/v2/backends/result"
 	"github.com/RichardKnop/machinery/v2/config"
