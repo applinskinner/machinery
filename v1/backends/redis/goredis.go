@@ -14,7 +14,6 @@ import (
 	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/RichardKnop/machinery/v1/log"
 	"github.com/RichardKnop/machinery/v1/tasks"
-	"github.com/RichardKnop/redsync"
 )
 
 // BackendGR represents a Redis result backend
@@ -52,6 +51,7 @@ func NewGR(cnf *config.Config, addrs []string, db int) iface.Backend {
 	}
 
 	b.rclient = redis.NewUniversalClient(ropt)
+	b.redsync = redsync.New(redsyncgoredis.NewPool(b.rclient))
 	return b
 }
 

@@ -10,16 +10,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/urfave/cli"
 
-	"github.com/RichardKnop/machinery/v1/config"
-	"github.com/RichardKnop/machinery/v1/log"
-	"github.com/RichardKnop/machinery/v1/tasks"
+	"github.com/RichardKnop/machinery/v2/config"
+	"github.com/RichardKnop/machinery/v2/log"
+	"github.com/RichardKnop/machinery/v2/tasks"
 	"github.com/RichardKnop/machinery/v2"
 
-	exampletasks "github.com/RichardKnop/machinery/example/tasks"
-	tracers "github.com/RichardKnop/machinery/example/tracers"
-	amqpbackend "github.com/RichardKnop/machinery/v1/backends/amqp"
-	amqpbroker "github.com/RichardKnop/machinery/v1/brokers/amqp"
-	eagerlock "github.com/RichardKnop/machinery/v1/locks/eager"
+	exampletasks "github.com/RichardKnop/machinery/v2/example/tasks"
+	tracers "github.com/RichardKnop/machinery/v2/example/tracers"
+	amqpbackend "github.com/RichardKnop/machinery/v2/backends/amqp"
+	amqpbroker "github.com/RichardKnop/machinery/v2/brokers/amqp"
+	eagerlock "github.com/RichardKnop/machinery/v2/locks/eager"
 	opentracing "github.com/opentracing/opentracing-go"
 	opentracing_log "github.com/opentracing/opentracing-go/log"
 )
@@ -33,8 +33,6 @@ func init() {
 	app = cli.NewApp()
 	app.Name = "machinery"
 	app.Usage = "machinery worker and send example tasks with machinery send"
-	app.Author = "Richard Knop"
-	app.Email = "risoknop@gmail.com"
 	app.Version = "0.0.0"
 }
 
@@ -67,29 +65,24 @@ func main() {
 	app.Run(os.Args)
 }
 
-func loadConfig() (*config.Config, error) {
-	return config.NewFromEnvironment()
-}
-
 func startServer() (*machinery.Server, error) {
-	cnf, err := loadConfig()
-	if err != nil {
-		return nil, err
+	cnf := &config.Config{
+		Broker:          "amqp://guest:guest@localhost:5672/",
+		DefaultQueue:    "machinery_tasks",
+		ResultBackend:   "amqp://guest:guest@localhost:5672/",
+		ResultsExpireIn: 3600,
+		AMQP: &config.AMQPConfig{
+			Exchange:      "machinery_exchange",
+			ExchangeType:  "direct",
+			BindingKey:    "machinery_task",
+			PrefetchCount: 3,
+		},
 	}
-
-	fmt.Println(cnf.Broker)
 
 	// Create server instance
-	broker, err := amqpbroker.New(cnf), nil
-	if err != nil {
-		return nil, err
-	}
-	backend, err := amqpbackend.New(cnf), nil
-	if err != nil {
-		return nil, err
-	}
+	broker := amqpbroker.New(cnf)
+	backend := amqpbackend.New(cnf)
 	lock := eagerlock.New()
-
 	server := machinery.NewServer(cnf, broker, backend, lock)
 
 	// Register tasks

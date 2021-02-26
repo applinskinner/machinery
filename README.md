@@ -88,20 +88,47 @@ Add the Machinery library to your $GOPATH/src:
 go get github.com/RichardKnop/machinery/v1
 ```
 
-First, you will need to define some tasks. Look at sample tasks in `example/tasks/tasks.go` to see a few examples.
-
-Second, you will need to launch a worker process:
+Or to get experimental v2 release:
 
 ```sh
-go run example/machinery.go worker
+go get github.com/RichardKnop/machinery/v2
+```
+
+First, you will need to define some tasks. Look at sample tasks in `example/tasks/tasks.go` to see a few examples.
+
+Second, you will need to launch a worker process with one of these commands (v2 is recommended since it doesn't import dependencies for all brokers / backends, only those you actually need):
+
+```sh
+go run example/amqp/main.go worker
+go run example/redis/main.go worker
+
+go run example/amqp/main.go worker
+go run example/redis/main.go worker
+```
+
+You can also try v2 examples.
+
+```sh
+cd v2/
+go run example/amqp/main.go worker
+go run example/redigo/main.go worker // Redis with redigo driver
+go run example/go-redis/main.go worker // Redis with Go Redis driver
+
+go run example/amqp/main.go worker
+go run example/redis/main.go worker
 ```
 
 ![Example worker][1]
 
-Finally, once you have a worker running and waiting for tasks to consume, send some tasks:
+Finally, once you have a worker running and waiting for tasks to consume, send some tasks with one of these commands (v2 is recommended since it doesn't import dependencies for all brokers / backends, only those you actually need):
 
 ```sh
-go run example/machinery.go send
+go run example/v2/amqp/main.go send
+go run example/v2/redigo/main.go send // Redis with redigo driver
+go run example/v2/go-redis/main.go send // Redis with Go Redis driver
+
+go run example/v1/amqp/main.go send
+go run example/v1/redis/main.go send
 ```
 
 You will be able to see the tasks being processed asynchronously by the worker:

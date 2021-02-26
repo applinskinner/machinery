@@ -11,6 +11,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-redis/redis/v8"
+	"github.com/go-redsync/redsync/v4"
+
 	"github.com/RichardKnop/machinery/v1/brokers/errs"
 	"github.com/RichardKnop/machinery/v1/brokers/iface"
 	"github.com/RichardKnop/machinery/v1/common"
@@ -29,9 +32,10 @@ type BrokerGR struct {
 	processingWG sync.WaitGroup // use wait group to make sure task processing completes
 	delayedWG    sync.WaitGroup
 	// If set, path to a socket file overrides hostname
-	socketPath string
-	redsync    *redsync.Redsync
-	redisOnce  sync.Once
+	socketPath           string
+	redsync              *redsync.Redsync
+	redisOnce            sync.Once
+	redisDelayedTasksKey string
 }
 
 // NewGR creates new Broker instance
@@ -57,7 +61,9 @@ func NewGR(cnf *config.Config, addrs []string, db int) iface.Broker {
 
 	b.rclient = redis.NewUniversalClient(ropt)
 	if cnf.Redis.DelayedTasksKey != "" {
-		redisDelayedTasksKey = cnf.Redis.DelayedTasksKey
+		b.redisDelayedTasksKey = cnf.Redis.DelayedTasksKey
+	} else {
+		b.redisDelayedTasksKey = defaultRedisDelayedTasksKey
 	}
 	return b
 }
@@ -134,7 +140,7 @@ func (b *BrokerGR) StartConsuming(consumerTag string, concurrency int, taskProce
 			case <-b.GetStopChan():
 				return
 			default:
-				task, err := b.nextDelayedTask(redisDelayedTasksKey)
+				task, err := b.nextDelayedTask(b.redisDelayedTasksKey)
 				if err != nil {
 					continue
 				}
@@ -356,7 +362,6 @@ func (b *BrokerGR) nextDelayedTask(key string) (result []byte, err error) {
 
 	var (
 		items []string
-		reply interface{}
 	)
 
 	pollPeriod := 500 // default poll period for delayed tasks
@@ -388,8 +393,15 @@ func (b *BrokerGR) nextDelayedTask(key string) (result []byte, err error) {
 				return redis.Nil
 			}
 
-			return nil
+			// only return the first zrange value if there are no other changes in this key
+			// to make sure a delayed task would only be consumed once
+			_, err = tx.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+				pipe.ZRem(ctx, key, items[0])
+				result = []byte(items[0])
+				return nil
+			})
 
+<<<<<<< HEAD
 		}
 		if err = b.rclient.Watch(watchFunc, key); err != nil {
 			return
@@ -399,11 +411,14 @@ func (b *BrokerGR) nextDelayedTask(key string) (result []byte, err error) {
 		txpipe.ZRem(key, items[0])
 		reply, err = txpipe.Exec()
 		if err != nil {
-			return
+=======
+			return err
 		}
 
-		if reply != nil {
-			result = []byte(items[0])
+		if err = b.rclient.Watch(context.Background(), watchFunc, key); err != nil {
+>>>>>>> 27ec596da01c992f191ab0e353a17c92c7580b91
+			return
+		} else {
 			break
 		}
 	}
